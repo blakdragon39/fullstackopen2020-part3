@@ -22,10 +22,6 @@ app.use(morgan(function (tokens, req, res) {
     ].join(' ')
 }))
 
-function generateId() {
-    return Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER))
-}
-
 //todo migrate
 // app.get('/info', (req, res) => {
 //     const count = persons.length
@@ -37,11 +33,13 @@ function generateId() {
 //     `)
 // })
 
-app.get('/api/persons', (req, res) => {
-    Person.find({}).then(people => res.json(people))
+app.get('/api/persons', (req, res, next) => {
+    Person.find({})
+        .then(people => res.json(people))
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
     if (!body.name) {
         return res.status(400).json({'error': 'Name required'})
@@ -55,20 +53,20 @@ app.post('/api/persons', (req, res) => {
         number: body.number
     })
 
-    person.save().then(addedPerson => {
-        res.json(addedPerson)
-    })
+    person.save()
+        .then(addedPerson => res.json(addedPerson))
+        .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = req.params.id
-    Person.findById(id).then(person => {
-        if (person) {
-            res.json(person)
-        } else {
-            res.status(404).end()
-        }
-    })
+app.get('/api/persons/:id', (req, res, next) => {
+    Person.findById(req.params.id)
+        .then(person => {
+            if (person) {
+                res.json(person)
+            } else {
+                res.status(404).end()
+            }
+        }).catch(error => next(error))
 })
 
 //todo migrate
@@ -85,19 +83,28 @@ app.get('/api/persons/:id', (req, res) => {
 //     }
 // })
 
-//todo migrate
-// app.delete('/api/persons/:id', (req, res) => {
-//     const id = Number(req.params.id)
-//     persons = persons.filter(person => person.id !== id)
-//
-//     res.status(204).end()
-// })
+app.delete('/api/persons/:id', (req, res, next) => {
+    Person.findByIdAndDelete(req.params.id)
+        .then(result => res.status(204).end())
+        .catch(error => next(error))
+})
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'Endpoint not found' })
 }
 
-app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'Malformed Object ID' })
+    }
+
+    next(error)
+}
 
 const PORT = process.env.PORT
+app.use(unknownEndpoint)
+app.use(errorHandler)
 app.listen(PORT, () => console.log(`Running on port ${PORT}`))
