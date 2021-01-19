@@ -22,16 +22,18 @@ app.use(morgan(function (tokens, req, res) {
     ].join(' ')
 }))
 
-//todo migrate
-// app.get('/info', (req, res) => {
-//     const count = persons.length
-//     res.send(`
-//     <div>
-//         <p>Phonebook has info for ${count} people</p>
-//         <p>${new Date()}</p>
-//     </div>
-//     `)
-// })
+app.get('/info', (req, res, next) => {
+    Person.find({})
+        .then(people => {
+            res.send(`
+            <div>
+                <p>Phonebook has info for ${people.length} people</p>
+                <p>${new Date()}</p>
+            </div>
+            `)
+        })
+        .catch(error => next(error))
+})
 
 app.get('/api/persons', (req, res, next) => {
     Person.find({})
