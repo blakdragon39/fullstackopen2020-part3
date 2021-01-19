@@ -26,21 +26,21 @@ function generateId() {
     return Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER))
 }
 
-app.get('/info', (req, res) => {
-    const count = persons.length
-    res.send(`
-    <div>
-        <p>Phonebook has info for ${count} people</p>
-        <p>${new Date()}</p>
-    </div>
-    `)
-})
+//todo migrate
+// app.get('/info', (req, res) => {
+//     const count = persons.length
+//     res.send(`
+//     <div>
+//         <p>Phonebook has info for ${count} people</p>
+//         <p>${new Date()}</p>
+//     </div>
+//     `)
+// })
 
 app.get('/api/persons', (req, res) => {
     Person.find({}).then(people => res.json(people))
 })
 
-//todo migrate
 app.post('/api/persons', (req, res) => {
     const body = req.body
     if (!body.name) {
@@ -49,18 +49,15 @@ app.post('/api/persons', (req, res) => {
     if (!body.number) {
         return res.status(400).json({'error': 'Number required'})
     }
-    if (persons.find(person => person.name === body.name)) {
-        return res.status(400).json({'error': `${body.name} already exists in the phonebook`})
-    }
 
-    const person = {
-        id: generateId(),
+    const person = new Person({
         name: body.name,
         number: body.number
-    }
-    persons = persons.concat(person)
+    })
 
-    res.json(person)
+    person.save().then(addedPerson => {
+        res.json(addedPerson)
+    })
 })
 
 app.get('/api/persons/:id', (req, res) => {
@@ -75,26 +72,26 @@ app.get('/api/persons/:id', (req, res) => {
 })
 
 //todo migrate
-app.put('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const personToUpdate = persons.find(person => person.id === id)
-
-    if (personToUpdate) {
-        personToUpdate.name = req.body.name
-        personToUpdate.number = req.body.number
-        res.json(personToUpdate)
-    } else {
-        res.status(404).end()
-    }
-})
+// app.put('/api/persons/:id', (req, res) => {
+//     const id = Number(req.params.id)
+//     const personToUpdate = persons.find(person => person.id === id)
+//
+//     if (personToUpdate) {
+//         personToUpdate.name = req.body.name
+//         personToUpdate.number = req.body.number
+//         res.json(personToUpdate)
+//     } else {
+//         res.status(404).end()
+//     }
+// })
 
 //todo migrate
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
-
-    res.status(204).end()
-})
+// app.delete('/api/persons/:id', (req, res) => {
+//     const id = Number(req.params.id)
+//     persons = persons.filter(person => person.id !== id)
+//
+//     res.status(204).end()
+// })
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'Endpoint not found' })
