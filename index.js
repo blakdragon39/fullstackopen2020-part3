@@ -69,19 +69,17 @@ app.get('/api/persons/:id', (req, res, next) => {
         }).catch(error => next(error))
 })
 
-//todo migrate
-// app.put('/api/persons/:id', (req, res) => {
-//     const id = Number(req.params.id)
-//     const personToUpdate = persons.find(person => person.id === id)
-//
-//     if (personToUpdate) {
-//         personToUpdate.name = req.body.name
-//         personToUpdate.number = req.body.number
-//         res.json(personToUpdate)
-//     } else {
-//         res.status(404).end()
-//     }
-// })
+app.put('/api/persons/:id', (req, res, next) => {
+    const person = {
+        name: req.body.name,
+        number: req.body.number
+    }
+
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(updatedPerson => res.json(updatedPerson))
+        .catch(error => next(error))
+
+})
 
 app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
