@@ -1,10 +1,13 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-const app = express()
+
+const Person = require('./models/person')
 
 morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 
+const app = express()
 app.use(cors())
 app.use(express.json())
 app.use(express.static('build'))
@@ -19,35 +22,8 @@ app.use(morgan(function (tokens, req, res) {
     ].join(' ')
 }))
 
-let persons = [
-    {
-        "name": "Arto Hellas",
-        "number": "040-123456",
-        "id": 1
-    },
-    {
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523",
-        "id": 2
-    },
-    {
-        "name": "Dan Abramov",
-        "number": "12-43-234345",
-        "id": 3
-    },
-    {
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122",
-        "id": 4
-    }
-]
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
-
 function generateId() {
-    return getRandomInt(Number.MAX_SAFE_INTEGER)
+    return Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER))
 }
 
 app.get('/info', (req, res) => {
@@ -61,9 +37,10 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(people => res.json(people))
 })
 
+//todo migrate
 app.post('/api/persons', (req, res) => {
     const body = req.body
     if (!body.name) {
@@ -87,16 +64,17 @@ app.post('/api/persons', (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-
-    if (person) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
+    const id = req.params.id
+    Person.findById(id).then(person => {
+        if (person) {
+            res.json(person)
+        } else {
+            res.status(404).end()
+        }
+    })
 })
 
+//todo migrate
 app.put('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id)
     const personToUpdate = persons.find(person => person.id === id)
@@ -110,6 +88,7 @@ app.put('/api/persons/:id', (req, res) => {
     }
 })
 
+//todo migrate
 app.delete('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id)
     persons = persons.filter(person => person.id !== id)
@@ -123,5 +102,5 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`Running on port ${PORT}`))
