@@ -3,7 +3,7 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 
-morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
+morgan.token('body', function (req) { return JSON.stringify(req.body) })
 
 const Person = require('./models/person')
 
@@ -44,10 +44,10 @@ app.get('/api/persons', (req, res, next) => {
 app.post('/api/persons', (req, res, next) => {
     const body = req.body
     if (!body.name) {
-        return res.status(400).json({'error': 'Name required'})
+        return res.status(400).json({ 'error': 'Name required' })
     }
     if (!body.number) {
-        return res.status(400).json({'error': 'Number required'})
+        return res.status(400).json({ 'error': 'Number required' })
     }
 
     const person = new Person({
@@ -85,7 +85,7 @@ app.put('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
-        .then(result => res.status(204).end())
+        .then(res.status(204).end())
         .catch(error => next(error))
 })
 
